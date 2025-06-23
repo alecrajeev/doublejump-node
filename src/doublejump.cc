@@ -1,6 +1,7 @@
 #include "doublejump.h"
 #include "metrohash64.h"
 #include <random>
+#include <cstdlib>
 
 // Jump hash implementation
 static int32_t jump_hash(uint64_t key, int32_t num_buckets) noexcept
@@ -123,9 +124,21 @@ void CompactHolder::shrink(const std::vector<std::string> &newA) noexcept
   a = newA;
 }
 
-// Initialize static members
-std::mt19937 DoubleJump::gen(DoubleJump::rd());
-std::random_device DoubleJump::rd;
+// Function to initialize the random number generator
+std::mt19937 initializeGenerator() {
+  const char* ci_env = std::getenv("CI");
+  if (ci_env != nullptr && std::string(ci_env) == "true") {
+      // If CI is set to "true", use a fixed seed for testing
+      return std::mt19937(123456789);
+  } else {
+      // Otherwise, use a random seed
+      std::random_device rd;
+      return std::mt19937(rd());
+  }
+}
+
+// Initialize static member
+std::mt19937 DoubleJump::gen = initializeGenerator();
 
 void DoubleJump::add(const std::string &obj) noexcept
 {
